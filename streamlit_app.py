@@ -3,67 +3,61 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import kagglehub  # Baixar dataset do Kaggle
+import kagglehub  # Para baixar o dataset do Kaggle
 
 # Título do aplicativo
 st.title("📊 Análise de Dados com Pandas + Streamlit")
 
-# Função para baixar o dataset do Kaggle
+# Baixar o dataset com kagglehub
 @st.cache_data
 def baixar_dados_kaggle():
     path = kagglehub.dataset_download("mosapabdelghany/medical-insurance-cost-dataset")
     return path
 
-# Caminho do dataset
+# Caminho do arquivo CSV
 dataset_path = baixar_dados_kaggle()
 arquivo = f"{dataset_path}/insurance.csv"
 
-# Carregar os dados
+# Carregar e preparar os dados
 @st.cache_data
 def carregar_dados(nome_arquivo):
     df = pd.read_csv(nome_arquivo)
 
-    # Criar nova coluna para categorizar número de filhos
+    # Categorizar número de filhos: 0, 1, 2, 3+
     df["filhos_categoria"] = df["children"].apply(lambda x: str(x) if x < 3 else "3+")
-
-    # Capitalizar regiões e agrupar
-    df["region_formatada"] = df["region"].apply(lambda x: x.capitalize())
-    df["regiao_categoria"] = df["region_formatada"].apply(
-        lambda x: x if x in ["Southeast", "Northwest"] else "Outras"
-    )
 
     return df
 
 df = carregar_dados(arquivo)
 
-# Mostrar dados
+# Mostrar os dados originais
 st.subheader("🔍 Visualização da Tabela de Dados")
 st.dataframe(df)
 
 # Filtros interativos
 st.sidebar.header("🔧 Filtros")
 
-sexo = st.sidebar.multiselect("Sexo", options=df['sex'].unique(), default=df['sex'].unique())
+sexo = st.sidebar.multiselect("Sexo", options=df["sex"].unique(), default=df["sex"].unique())
 
-fumante = st.sidebar.selectbox("É fumante?", options=df['smoker'].unique())
+fumante = st.sidebar.selectbox("É fumante?", options=df["smoker"].unique())
 
 filhos = st.sidebar.multiselect("Número de Filhos", options=["0", "1", "2", "3+"], default=["0", "1", "2", "3+"])
 
-regioes = st.sidebar.multiselect("Região", options=["Southeast", "Northwest", "Outras"], default=["Southeast", "Northwest", "Outras"])
+regioes = st.sidebar.multiselect("Região", options=df["region"].unique(), default=df["region"].unique())
 
-# Aplicar filtros
+# Aplicar os filtros
 df_filtrado = df[
-    (df['sex'].isin(sexo)) &
-    (df['smoker'] == fumante) &
-    (df['filhos_categoria'].isin(filhos)) &
-    (df['regiao_categoria'].isin(regioes))
+    (df["sex"].isin(sexo)) &
+    (df["smoker"] == fumante) &
+    (df["filhos_categoria"].isin(filhos)) &
+    (df["region"].isin(regioes))
 ]
 
-# Mostrar dados filtrados
+# Mostrar os dados filtrados
 st.subheader("📌 Dados Filtrados")
 st.dataframe(df_filtrado)
 
-# Estatísticas
+# Estatísticas descritivas
 st.subheader("📈 Estatísticas Descritivas")
 st.write(df_filtrado.describe())
 
@@ -71,7 +65,7 @@ st.write(df_filtrado.describe())
 st.subheader("💸 Relação entre Total da Conta e Idade")
 st.scatter_chart(df_filtrado, x="age", y="charges", color="bmi", size="children")
 
-# Gráfico 2: Bar
+# Gráfico 2: Gráfico de Barras
 st.subheader("📦 Distribuição Custo x Idade")
 st.bar_chart(df_filtrado, x="age", y="charges", color="smoker")
 
