@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import kagglehub  # Baixar dataset do Kaggle
+import kagglehub  # Importando o kagglehub para baixar o dataset
 
 # Título do aplicativo
 st.title("📊 Análise de Dados com Pandas + Streamlit")
@@ -11,29 +11,23 @@ st.title("📊 Análise de Dados com Pandas + Streamlit")
 # Função para baixar o dataset do Kaggle
 @st.cache_data
 def baixar_dados_kaggle():
+    # Baixa o dataset e retorna o caminho
     path = kagglehub.dataset_download("mosapabdelghany/medical-insurance-cost-dataset")
     return path
 
-# Caminho do dataset
+# Baixar o dataset e obter o caminho
 dataset_path = baixar_dados_kaggle()
-arquivo = f"{dataset_path}/insurance.csv"
 
-# Carregar os dados
+# Exibir o caminho para o dataset baixado
+st.write(f"📂 Dataset baixado para o caminho: {dataset_path}")
+
+# Carregar o dataset usando pandas
 @st.cache_data
 def carregar_dados(nome_arquivo):
-    df = pd.read_csv(nome_arquivo)
+    return pd.read_csv(nome_arquivo)
 
-    # Criar nova coluna para categorizar número de filhos
-    df["filhos_categoria"] = df["children"].apply(lambda x: str(x) if x < 3 else "3+")
-
-    # Capitalizar regiões e agrupar
-    df["region_formatada"] = df["region"].apply(lambda x: x.capitalize())
-    df["regiao_categoria"] = df["region_formatada"].apply(
-        lambda x: x if x in ["Southeast", "Northwest"] else "Outras"
-    )
-
-    return df
-
+# O nome do arquivo dentro do diretório de dados baixados
+arquivo = f"{dataset_path}/insurance.csv"
 df = carregar_dados(arquivo)
 
 # Mostrar dados
@@ -42,24 +36,12 @@ st.dataframe(df)
 
 # Filtros interativos
 st.sidebar.header("🔧 Filtros")
-
-sexo = st.sidebar.multiselect("Sexo", options=df['sex'].unique(), default=df['sex'].unique())
-
+sexo = st.sidebar.multiselect("Sexo", options=df['sex'].unique(),
+                              default=df['sex'].unique())
 fumante = st.sidebar.selectbox("É fumante?", options=df['smoker'].unique())
 
-filhos = st.sidebar.multiselect("Número de Filhos", options=["0", "1", "2", "3+"], default=["0", "1", "2", "3+"])
-
-regioes = st.sidebar.multiselect("Região", options=["Southeast", "Northwest", "Outras"], default=["Southeast", "Northwest", "Outras"])
-
 # Aplicar filtros
-df_filtrado = df[
-    (df['sex'].isin(sexo)) &
-    (df['smoker'] == fumante) &
-    (df['filhos_categoria'].isin(filhos)) &
-    (df['regiao_categoria'].isin(regioes))
-]
-
-# Mostrar dados filtrados
+df_filtrado = df[(df['sex'].isin(sexo)) & (df['smoker'] == fumante)]
 st.subheader("📌 Dados Filtrados")
 st.dataframe(df_filtrado)
 
