@@ -45,12 +45,26 @@ filhos = st.sidebar.multiselect("Número de Filhos", options=["0", "1", "2", "3+
 
 regioes = st.sidebar.multiselect("Região", options=df["region"].unique(), default=df["region"].unique())
 
+# Filtro de faixa etária
+idade_min = int(df["age"].min())
+idade_max = int(df["age"].max())
+
+idade_selecionada = st.sidebar.slider(
+    "Faixa Etária",
+    min_value=idade_min,
+    max_value=idade_max,
+    value=(idade_min, idade_max),
+    step=1
+)
+
 # Aplicar os filtros
 df_filtrado = df[
     (df["sex"].isin(sexo)) &
     (df["smoker"] == fumante) &
     (df["filhos_categoria"].isin(filhos)) &
-    (df["region"].isin(regioes))
+    (df["region"].isin(regioes)) &
+    (df["age"] >= idade_selecionada[0]) &
+    (df["age"] <= idade_selecionada[1])
 ]
 
 # Mostrar os dados filtrados
